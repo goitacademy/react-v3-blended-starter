@@ -2,19 +2,98 @@ import Modal from "../Modal/Modal";
 import PostList from "../PostList/PostList";
 import SearchBox from "../SearchBox/SearchBox";
 import Pagination from "../Pagination/Pagination";
+import CreatePostForm from "../CreatePostForm/CreatePostForm";
 
 import css from "./App.module.css";
+import { useState } from "react";
+import { useDebounce } from "use-debounce";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { fetchPosts } from "../../services/postService";
+import { Post } from "../../types/post";
+import EditPostForm from "../EditPostForm/EditPostForm";
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isCreatePost, setIsCreatePost] = useState(false);
+  const [isEditPost, setIsEditPost] = useState(false);
+  const [editPost, setEditPost] = useState<Post | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
+
+  const { data } = useQuery({
+    queryKey: ["posts", debouncedSearchQuery, currentPage],
+    queryFn: () => fetchPosts(debouncedSearchQuery, currentPage),
+    placeholderData: keepPreviousData,
+  });
+  const changeSearchQuery = (newQuery: string) => {
+    setCurrentPage(1);
+    setSearchQuery(newQuery);
+  };
+
+  const toggleCreatePost = () => {
+    setIsCreatePost(!isCreatePost);
+  };
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
+  const toggleEditPost = (postToEdit?: Post) => {
+    if (postToEdit) {
+      setEditPost(postToEdit);
+    }
+    setIsEditPost(!isEditPost);
+  };
+  const totalPages = data?.totalCount ? Math.ceil(data.totalCount / 8) : 0;
+  const posts = data?.posts ?? [];
+
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox />
-        <Pagination />
-        <button className={css.button}>Create post</button>
+        <SearchBox value={searchQuery} onSearch={changeSearchQuery} />
+        {totalPages > 1 && (
+          <Pagination
+            totalPages={totalPages}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+          />
+        )}
+
+        <button
+          className={css.button}
+          onClick={() => {
+            toggleModal();
+            toggleCreatePost();
+          }}
+        >
+          Create post
+        </button>
       </header>
-      <Modal>{/* Передати через children компонент CreatePostForm або EditPostForm */}</Modal>
-      <PostList />
+
+      {isModalOpen && (
+        <Modal onClose={toggleModal}>
+          {isCreatePost && (
+            <CreatePostForm
+              onClose={() => {
+                toggleModal();
+                toggleCreatePost();
+              }}
+            />
+          )}
+          {isEditPost && editPost && (
+            <EditPostForm
+              initialValues={editPost}
+              onClose={() => {
+                toggleModal();
+                toggleEditPost();
+                setEditPost(null);
+              }}
+            />
+          )}
+        </Modal>
+      )}
+
+      {posts.length > 0 && <PostList posts={posts} toggleModal={toggleModal} toggleEditPost={toggleEditPost}/>}
     </div>
   );
 }
