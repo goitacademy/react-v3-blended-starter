@@ -1,14 +1,48 @@
 import axios from "axios";
+import type { Photo } from "../types/photo";
 
-const API_KEY = "563492ad6f9170000100000108dc2880626e4436b3634ce1cf6b4d74";
+const myAPI_KEY = import.meta.env.VITE_API_KEY;
 axios.defaults.baseURL = "https://api.pexels.com/v1/";
-axios.defaults.headers.common["Authorization"] = API_KEY;
+axios.defaults.headers.common["Authorization"] = myAPI_KEY;
 axios.defaults.params = {
   orientation: "landscape",
 };
 
-export const getPhotos = async (query) => {
-  const response = await axios.get(`search?query=${query}`);
+interface PhotoHttpResponse {
+  photos: Photo[];
+  // total_results: number;
+  // next_page: string;
+}
+
+interface FetchPhotoParams {
+  query: string;
+  page?: number;
+  per_page?: number;
+  // orientation?: "landscape" | "portrait" | "square";
+  // size?: "large" | "medium" | "small" | "tiny";
+}
+
+export const getPhotos = async (params: FetchPhotoParams): Promise<Photo[]> => {
+  const response = await axios.get<PhotoHttpResponse>(`search`, { params });
 
   return response.data.photos;
 };
+
+//searh for photos
+// curl -H "Authorization: YOUR_API_KEY" \
+//   "https://api.pexels.com/v1/search?query=nature&per_page=1"
+
+// Pagination Request Parameters
+// GET https://api.pexels.com/v1/curated?page=2&per_page=40
+
+// Pagination Response Attributes
+// {
+//   "page": 2,
+//   "per_page": 40,
+//   "total_results": 8000,
+//   "next_page": "https://api.pexels.com/v1/curated?page=3&per_page=40",
+//   "prev_page": "https://api.pexels.com/v1/curated?page=1&per_page=40"
+// }
+
+// Get a Photo
+// GET https://api.pexels.com/v1/photos/:id

@@ -1,8 +1,12 @@
 import GridItem from "../GridItem/GridItem";
-
+import { type Photo } from "../../types/photo";
 import styles from "./PhotosGalleryItem.module.css";
 
-export default function PhotosGalleryItem() {
+interface PhotosGalleryItemProps {
+  photos: Photo[];
+}
+
+export default function PhotosGalleryItem({ photos }: PhotosGalleryItemProps) {
   return (
     <GridItem>
       <div
@@ -12,7 +16,9 @@ export default function PhotosGalleryItem() {
           borderColor: "avg_color",
         }}
       >
-        <img src="" alt="" />
+        {photos.map((photo) => (
+          <img key={photo.id} src={photo.src.tiny} alt={photo.alt} />
+        ))}
       </div>
     </GridItem>
   );
