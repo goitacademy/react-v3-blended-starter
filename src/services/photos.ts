@@ -46,3 +46,10 @@ export const getPhotos = async (params: FetchPhotoParams): Promise<Photo[]> => {
 
 // Get a Photo
 // GET https://api.pexels.com/v1/photos/:id
+
+
+// Response
+// id - унікальний ідентифікатор
+// avg_color - колір фотографії,
+// alt - опис фото,
+// src - об'єкт з розмірами картинок, нам цікаві розміри large та original.
