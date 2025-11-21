@@ -1,1 +1,11 @@
-export interface Photo {}
+type Photo = {
+  id: number;
+  avg_color: string;
+  alt: string;
+  src: {
+    original: string;
+    large: string;
+  };
+};
+
+export type { Photo };
